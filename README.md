@@ -1,10 +1,15 @@
 # dbforbix
-monitor  db2(9/10) mysql oracle(10/11) and  zabbix3.x zabbix4.x zabbix5.x can use   and centos6/7 can run 
+monitor  db2(9/10) mysql oracle(10/11) and  zabbix3.x zabbix4.x zabbix5.x can use   and centos6/7 can run . can be use production. 
 
 本版本基于 smartmarmot/DBforBIX Version 2.2-beta 
-
-
 参考资料 http://www.smartmarmot.com/wiki/index.php?title=DBforBIX
+
+升级部分
+1、oracle添加了密码更改的校验
+2、db2的语句进行了优化可以监控db2 v9和 v10
+3、可以进行中文传输。
+4、由于对源版本发送消息进行改进，由socker发送消息，改为通过zabbix_sender发送。 经过测试可以适配zabbix3.0 以上版本。 生产已测试无问题。
+
 
 
 准备步骤
@@ -67,7 +72,8 @@ Notify systemd that a new dbforbix.service file exists by executing the followin
 To configure the service to start at each boot run (from root console):
 # systemctl enable name.service
 
-
+#需要安装zabbix_sender
+yum install -y zabbix_sender
 
 启动服务进行测试  数据库是否可以连接
 If you would like to test dbforbix from command line you can simply type:
