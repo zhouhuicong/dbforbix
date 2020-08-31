@@ -7,8 +7,8 @@ monitor  db2(9/10) mysql oracle(10/11) and  zabbix3.x zabbix4.x zabbix5.x can us
 
 
 升级部分
-1、oracle添加了密码更改的校验
-2、db2的语句进行了优化可以监控db2 v9和 v10
+1、oracle添加了密码即将过期的校验
+2、db2的语句进行了优化可以监控db2 数据库v9和 v10版本
 3、可以进行中文传输。
 4、由于对源版本发送消息进行改进，由socker发送消息，改为通过zabbix_sender发送。 经过测试可以适配zabbix3.0 以上版本。 生产已测试无问题。
 
@@ -24,24 +24,32 @@ Install the JAVA JVM >= 1.7 (both Oracle and OpenJDK works properly)   #rpm安�
 Install JSVC (Java daemon launcher)   #编译安装 
 Copy config.properties.sample to config.properties and change it adding your databases.
 
-# cp  config.properties.sample to config.properties 
 
-####需要安装gcc 
-checking for gcc... no
-checking for cc... no
-checking for cl.exe... no
 
-yum -y install gcc-c++ gcc
-#编译安装jsvc  上传commons-daemon-1.0.15-src.tar.gz  使用root用户执行
-  cd	/root/commons-daemon-1.0.15-src/src/native/unix
- sh support/buildconf.sh  
- 如果报错 autoconf: command not found ,则 yum -y install autoconf 
 
-./configure --with-java=/usr/java  --with-os-type=jdk1.7.0_80 
+
+--------------------------------------快速安装脚本-------------------
+将所有安装包上传到/home/zabbix目录下
+mkdir /home/zabbix/
+yum -y install gcc-c++ gcc  autoconf 
+cd /home/zabbix/
+tar -xvf jdbc_jdk1.8.0_131.tar  #需要自己安装jdk和添加数据库依赖包，本人已经封装好
+tar -xvf commons-daemon-1.0.15-src.tar.gz
+cd ./commons-daemon-1.0.15-src/src/native/unix
+sh support/buildconf.sh  
+./configure --with-java=/home/zabbix/jdk1.8.0_131/ --with-os-type=bin 
 make
------172.16.131.142
-./configure --with-java=/usr/local/java/jdk1.8.0_131/ --with-os-type=bin 
-make
+
+mkdir /home/zabbix/log
+chmod 777  /home/zabbix/log
+mv  /tmp/dbforbix*.zip  .
+unzip  dbforbix*.zip    #从archive目录下载编译好的包解压即可
+cd /home/zabbix/dbforbix
+IP=`ifconfig | grep -A1 eth | tail -1 | awk '{print $2}'|awk -F ':' '{print $2}'`
+sed -i.bak 's/x.x.x.x/'"$IP"' ./conf/config.properties
+sh  dbforbix.sh start 
+
+
 -----
 ##验证是否安装成功
 /home/zabbix/commons-daemon-1.0.15-src/src/native/unix/jsvc -help
@@ -52,38 +60,10 @@ EXEC=`whereis -b -B /bin /sbin /usr/bin /usr/sbin /usr/local/bin /usr/local/sbin
 
 然后：  sh  dbforbix.sh start 
 
-Initd  #此步有误，不存在init.d的目录，不要配置
-Now for all the distribution that are still using initd use the following procedure:
-Copy file /opt/dbforbix/init.d/dbforbix to /etc/init.d/dbforbix
-
-# cp /opt/dbforbix/init.d/dbforbix   /etc/init.d/dbforbix       
-
-Grant execute permissions to the following files:
-/etc/init.d/dbforbix
-/opt/dbforbix/run.sh
-For this example on RedHat, run:
-#  chkconfig -add dbforbix
-
-Systemd  #redhat 没安装此命令 不用配置
-If your distribution uses systemd, like most of the nowadays here are the steps:
-Copy the systemd included files
-# mkdir -p /etc/systemd/system/
-# cp systemd/dbforbix.service /etc/systemd/system/dbforbix.service
-
-Notify systemd that a new dbforbix.service file exists by executing the following command as root:
-# systemctl daemon-reload
-# systemctl start dbforbix.service
-
-To configure the service to start at each boot run (from root console):
-# systemctl enable name.service
 
 #需要安装zabbix_sender
 yum install -y zabbix_sender
 
-启动服务进行测试  数据库是否可以连接
-If you would like to test dbforbix from command line you can simply type:
-cd /opt/dbforbix   
- java -jar dbforbix.jar -a start -C /opt/dbforbix
 
 
 如果报错： java.lang.ClassNotFoundException: com.mysql.jdbc.Driver
@@ -178,26 +158,7 @@ conf.property 里修改
 DB.DB.Url=jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS = (PROTOCOL = TCP)(HOST = 1.2.3.4)(PORT = 1521)))(CONNECT_DATA=(SERVICE_NAME=YOUR_SERVICE)))
 
 
------------------------------------------------------------
--------批量脚本-------------------
 
-yum -y install gcc-c++ gcc
-cd /home/zabbix/
-tar -xvf jdbc_jdk1.8.0_131.tar 
-tar -xvf commons-daemon-1.0.15-src.tar.gz
-cd ./commons-daemon-1.0.15-src/src/native/unix
-sh support/buildconf.sh  
-./configure --with-java=/home/zabbix/jdk1.8.0_131/ --with-os-type=bin 
-make
-
-mkdir /home/zabbix/log
-chmod 777  /home/zabbix/log
-mv  /tmp/dbforbix_ora.tar  .
-tar -xvf dbforbix_ora.tar
-cd /home/zabbix/dbforbix
-IP=`ifconfig | grep -A1 eth | tail -1 | awk '{print $2}'|awk -F ':' '{print $2}'`
-sed -i.bak 's/x.x.x.x/'"$IP"' ./conf/config.properties
-sh  dbforbix.sh start 
 
 
 #===测试数据库连接
