@@ -11,10 +11,12 @@ monitor  db2(9/10) mysql oracle(10/11) and  zabbix3.x zabbix4.x zabbix5.x can us
 
 升级部分：
 
-1、oracle添加了密码即将过期的校验；
-2、db2的语句进行了优化可以监控db2 数据库v9和 v10版本；
+1、oracle添加了密码即将过期的校验;
 
-3、可以进行中文传输；
+2、db2的语句进行了优化可以监控db2 数据库v9和 v10版本;
+
+3、可以进行中文传输;
+
 4、由于对源版本发送消息进行改进，由socker发送消息，改为通过zabbix_sender发送。 
 
 经过测试可以适配zabbix3.0 以上版本。 生产已测试无问题。
